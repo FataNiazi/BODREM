@@ -2,8 +2,8 @@
 numpy>=1.26,<3
 scipy>=1.11,<2
 gymnasium>=0.29,<1
-gymnasium[classic-control]
 scikit-optimize>=0.9,<1
+torch>=2.2
 stable-baselines3>=2.3,<3
 mujoco>=3,<4
 matplotlib>=3.8,<4
