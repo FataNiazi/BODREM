@@ -34,12 +34,6 @@ python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
 
-If TinySim must come from a local repo:
-
-```bash
-source .venv/bin/activate
-pip install -e ../TinySim
-```
 
 List methods:
 
