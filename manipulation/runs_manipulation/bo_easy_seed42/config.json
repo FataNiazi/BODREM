@@ -1,0 +1,29 @@
+{
+  "method": "bo_only",
+  "checkpoint_path": "/home/medcvr/fata/csc415/project/BODREM/manipulation/manipulation_saved/manipulation_sac.pt",
+  "mu0": [
+    1.0,
+    0.1
+  ],
+  "T": 20,
+  "episodes_per_iter": 350,
+  "B_r": 20,
+  "bounds": {
+    "friction": [
+      0.6,
+      1.4
+    ],
+    "mass": [
+      0.06,
+      0.2
+    ]
+  },
+  "max_steps": 128,
+  "target_params": {
+    "friction": 0.7,
+    "mass": 0.18
+  },
+  "seed": 42,
+  "timestamp": "2026-04-07 21:38:15",
+  "device": "cuda"
+}
