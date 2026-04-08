@@ -12,7 +12,8 @@ A compatibility symlink `mountaincar -> mountaincar&cheetah` is included, so mod
 Run commands from repo root:
 
 ```bash
-cd <repo-root>
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
 ```
 
 ## Setup
@@ -41,5 +42,6 @@ See:
 Quick check:
 
 ```bash
-python -m mountaincar.cli list-methods
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+(cd "$REPO_ROOT" && "$REPO_ROOT/.venv/bin/python" -m mountaincar.cli list-methods)
 ```

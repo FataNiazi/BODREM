@@ -8,6 +8,7 @@ stable-baselines3>=2.3,<3
 mujoco>=3,<4
 matplotlib>=3.8,<4
 tinysim
+imageio
 
 # NOTE:
 # tinysim is required at runtime by TinySim evaluators.
