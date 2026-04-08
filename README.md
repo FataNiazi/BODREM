@@ -3,9 +3,7 @@
 This repository contains two top-level experiment areas:
 
 - `manipulation/`
-- `mountaincar&cheetah/`
-
-A compatibility symlink `mountaincar -> mountaincar&cheetah` is included, so module commands such as `python -m mountaincar.cli ...` work from repo root.
+- `mountaincar/`
 
 ## Working Directory
 
@@ -37,7 +35,7 @@ python3 manipulation/run_ablations.py
 
 See:
 
-- `mountaincar&cheetah/README.md`
+- `mountaincar/README.md`
 
 Quick check:
 

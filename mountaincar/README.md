@@ -22,8 +22,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 ```
 
-Compatibility note: `mountaincar` is an alias to `mountaincar&cheetah`, so commands use `python -m mountaincar...`.
-Do not run `python -m mountaincar...` from inside `mountaincar&cheetah/`, otherwise local `types.py` can shadow the stdlib `types` module.
+Do not run `python -m mountaincar...` from inside `mountaincar/`, otherwise local `types.py` can shadow the stdlib `types` module.
 
 ## Setup
 
@@ -69,7 +68,7 @@ Generate plots for this smoke example:
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 (cd "$REPO_ROOT" && "$REPO_ROOT/.venv/bin/python" -m mountaincar.plot_results \
   --input "$RUN_DIR" \
-  --output './mountaincar&cheetah/runs/plots/halfcheetah_smoke_2algo_2seed' \
+  --output './mountaincar/runs/plots/halfcheetah_smoke_2algo_2seed' \
   --task halfcheetah)
 ```
 
@@ -91,7 +90,7 @@ from mountaincar.runner import run_suite
 from mountaincar.types import MethodName
 
 seeds = [1,2,3,4,5,6,7,8,9,10]
-base_out = Path("mountaincar&cheetah/runs/mountaincar_edge_v123")
+base_out = Path("mountaincar/runs/mountaincar_edge_v123")
 
 sweep = {
     MethodName.BO: [
@@ -153,8 +152,8 @@ Plot all run outputs from this MountainCar sweep:
 
 ```bash
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-BASE="$REPO_ROOT/mountaincar&cheetah/runs/mountaincar_edge_v123"
-OUT_BASE="$REPO_ROOT/mountaincar&cheetah/runs/plots/mountaincar_edge_v123"
+BASE="$REPO_ROOT/mountaincar/runs/mountaincar_edge_v123"
+OUT_BASE="$REPO_ROOT/mountaincar/runs/plots/mountaincar_edge_v123"
 
 find "$BASE" -type f -name master_results.csv | while read -r csv; do
   RUN_DIR="$(dirname "$csv")"
@@ -183,7 +182,7 @@ from mountaincar.types import MethodName
 
 seeds = [1,2,3,4,5]
 methods = [MethodName.BO, MethodName.DR, MethodName.BO_DR, MethodName.DORAEMON, MethodName.BO_DORAEMON]
-base_out = Path("mountaincar&cheetah/runs/halfcheetah_edge_1800")
+base_out = Path("mountaincar/runs/halfcheetah_edge_1800")
 
 overrides = {
     MethodName.BO: {"bo_iters": 10, "bo_train_episodes_per_iter": 180},   # 1800
@@ -220,8 +219,8 @@ Plot all run outputs from this HalfCheetah sweep:
 
 ```bash
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-BASE="$REPO_ROOT/mountaincar&cheetah/runs/halfcheetah_edge_1800"
-OUT_BASE="$REPO_ROOT/mountaincar&cheetah/runs/plots/halfcheetah_edge_1800"
+BASE="$REPO_ROOT/mountaincar/runs/halfcheetah_edge_1800"
+OUT_BASE="$REPO_ROOT/mountaincar/runs/plots/halfcheetah_edge_1800"
 
 find "$BASE" -type f -name master_results.csv | while read -r csv; do
   RUN_DIR="$(dirname "$csv")"
@@ -250,7 +249,7 @@ RUN_DIR=$(cd "$REPO_ROOT" && "$REPO_ROOT/.venv/bin/python" -m mountaincar.cli ru
 
 (cd "$REPO_ROOT" && "$REPO_ROOT/.venv/bin/python" -m mountaincar.plot_results \
   --input "$RUN_DIR" \
-  --output './mountaincar&cheetah/runs/plots/mountaincar_smoke_all_methods_seed1' \
+  --output './mountaincar/runs/plots/mountaincar_smoke_all_methods_seed1' \
   --task mountaincar)
 ```
 
@@ -272,7 +271,7 @@ RUN_DIR=$(cd "$REPO_ROOT" && "$REPO_ROOT/.venv/bin/python" -m mountaincar.cli ba
 
 (cd "$REPO_ROOT" && "$REPO_ROOT/.venv/bin/python" -m mountaincar.plot_results \
   --input "$RUN_DIR" \
-  --output './mountaincar&cheetah/runs/plots/halfcheetah_batch_smoke_bo_dr' \
+  --output './mountaincar/runs/plots/halfcheetah_batch_smoke_bo_dr' \
   --task halfcheetah)
 ```
 
