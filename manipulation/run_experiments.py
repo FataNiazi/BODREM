@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import multiprocessing as mp
 import time
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -264,7 +265,8 @@ def main():
             else:
                 print(f"  ✗ ERROR: {r['error']}")
     else:
-        with ProcessPoolExecutor(max_workers=args.parallel) as ex:
+        ctx = mp.get_context("spawn")
+        with ProcessPoolExecutor(max_workers=args.parallel, mp_context=ctx) as ex:
             futures = {
                 ex.submit(run_one_safe, m, d, s): (m, d, s)
                 for m, d, s in experiments
