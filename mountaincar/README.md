@@ -78,7 +78,7 @@ All full-run examples below use `profile="edge"`.
 
 ### MountainCar edge sweep (v1/v2/v3, seeds 1-10)
 
-Method-first order (all seeds for one method-variant, then next):
+Method-first order (all seeds for one method-variant, then next) with continue-on-error (default):
 
 ```bash
 REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -94,9 +94,9 @@ base_out = Path("mountaincar/runs/mountaincar_edge_v123")
 
 sweep = {
     MethodName.BO: [
-        ("v1_baseline",    {"bo_iters": 20, "bo_train_episodes_per_iter": 180}),  # 3600
-        ("v2_more_outer",  {"bo_iters": 30, "bo_train_episodes_per_iter": 120}),  # 3600
-        ("v3_fewer_outer", {"bo_iters": 10, "bo_train_episodes_per_iter": 360}),  # 3600
+        ("v1_baseline",    {"bo_iters": 20, "bo_train_episodes_per_iter": 180}),
+        ("v2_more_outer",  {"bo_iters": 30, "bo_train_episodes_per_iter": 120}),
+        ("v3_fewer_outer", {"bo_iters": 10, "bo_train_episodes_per_iter": 360}),
     ],
     MethodName.DR: [
         ("v1_baseline",    {"dr_total_episodes": 3600, "dr_eval_every": 180}),
@@ -104,47 +104,80 @@ sweep = {
         ("v3_fewer_evals", {"dr_total_episodes": 3600, "dr_eval_every": 360}),
     ],
     MethodName.BO_DR: [
-        ("v1_baseline",    {"T": 20, "K": 180}),  # 3600
-        ("v2_more_outer",  {"T": 30, "K": 120}),  # 3600
-        ("v3_fewer_outer", {"T": 10, "K": 360}),  # 3600
+        ("v1_baseline",    {"T": 20, "K": 180}),
+        ("v2_more_outer",  {"T": 30, "K": 120}),
+        ("v3_fewer_outer", {"T": 10, "K": 360}),
     ],
     MethodName.DORAEMON: [
-        ("v1_baseline",    {"adapt_iters": 20, "blocks": 30, "episodes_per_block": 6}),   # 3600
-        ("v2_more_outer",  {"adapt_iters": 20, "blocks": 15, "episodes_per_block": 12}),  # 3600
-        ("v3_fewer_outer", {"adapt_iters": 10, "blocks": 15, "episodes_per_block": 24}),  # 3600
+        ("v1_baseline",    {"adapt_iters": 20, "blocks": 30, "episodes_per_block": 6}),
+        ("v2_more_outer",  {"adapt_iters": 20, "blocks": 15, "episodes_per_block": 12}),
+        ("v3_fewer_outer", {"adapt_iters": 10, "blocks": 15, "episodes_per_block": 24}),
     ],
     MethodName.BO_DORAEMON: [
         ("v1_baseline", {
             "T": 20, "blocks": 30, "episodes_per_block": 6,
             "stabilization_blocks": 0, "bo_init_random_points": 0,
             "center_hold_rounds": 1, "competence_extra_rounds": 0,
-        }),  # 3600
+        }),
         ("v2_more_outer", {
             "T": 20, "blocks": 15, "episodes_per_block": 12,
             "stabilization_blocks": 0, "bo_init_random_points": 0,
             "center_hold_rounds": 1, "competence_extra_rounds": 0,
-        }),  # 3600
+        }),
         ("v3_fewer_outer", {
             "T": 10, "blocks": 15, "episodes_per_block": 24,
             "stabilization_blocks": 0, "bo_init_random_points": 0,
             "center_hold_rounds": 1, "competence_extra_rounds": 0,
-        }),  # 3600
+        }),
     ],
 }
 
+def train_budget(method, o):
+    if method == MethodName.BO:
+        return int(o["bo_iters"]) * int(o["bo_train_episodes_per_iter"])
+    if method == MethodName.DR:
+        return int(o["dr_total_episodes"])
+    if method == MethodName.BO_DR:
+        return int(o["T"]) * int(o["K"])
+    if method == MethodName.DORAEMON:
+        return int(o["adapt_iters"]) * int(o["blocks"]) * int(o["episodes_per_block"])
+    if method == MethodName.BO_DORAEMON:
+        return int(o["T"]) * int(o["blocks"]) * int(o["episodes_per_block"])
+    raise ValueError(method)
+
+ok_suites = 0
+failed_suites = 0
+failures = []
+
 for method, variants in sweep.items():
     for variant_name, override in variants:
-        cfg = build_suite_config(
-            seeds=seeds,
-            methods=[method],
-            task="mountaincar",
-            profile="edge",
-            init_mode="scratch",
-            output_root=base_out / method.value.replace("+","plus").lower() / variant_name,
-            method_overrides={method: override},
-        )
-        res = run_suite(cfg)
-        print(method.value, variant_name, res.run_dir)
+        try:
+            budget = train_budget(method, override)
+            if budget != 3600:
+                raise ValueError(f"budget={budget} != 3600")
+
+            cfg = build_suite_config(
+                seeds=seeds,
+                methods=[method],
+                task="mountaincar",
+                profile="edge",
+                init_mode="scratch",
+                output_root=base_out / method.value.replace("+", "plus").lower() / variant_name,
+                method_overrides={method: override},
+            )
+            result = run_suite(cfg)
+            ok_suites += 1
+            print(f"OK     | {method.value} | {variant_name} | budget={budget} | {result.run_dir}")
+        except Exception as e:
+            failed_suites += 1
+            failures.append((method.value, variant_name, str(e)))
+            print(f"FAILED | {method.value} | {variant_name} | {e}")
+
+print(f"done: total suites={ok_suites + failed_suites}, succeeded={ok_suites}, failed={failed_suites}")
+if failures:
+    print("failure summary:")
+    for method_name, variant_name, err in failures:
+        print(f"- {method_name} | {variant_name} | {err}")
 PY
 ```
 
