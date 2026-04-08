@@ -1,38 +1,36 @@
 # BODREM Experiments
 
-This repository now contains two top-level experiment areas:
+This repository contains two top-level experiment areas:
 
 - `manipulation/`
 - `mountaincar&cheetah/`
 
-A compatibility symlink `mountaincar -> mountaincar&cheetah` is provided so module commands such as `python -m mountaincar.cli ...` keep working.
+A compatibility symlink `mountaincar -> mountaincar&cheetah` is included, so module commands such as `python -m mountaincar.cli ...` work from repo root.
+
+## Working Directory
+
+Run commands from repo root:
+
+```bash
+cd <repo-root>
+```
 
 ## Setup
 
-From repo root:
-
 ```bash
-cd /Users/kevaanbuch/Desktop/Uni/CSC415/BODREM
-./"mountaincar&cheetah"/scripts/setup_env.sh
-source ./"mountaincar&cheetah"/.venv/bin/activate
-```
-
-If TinySim cannot be installed from pip:
-
-```bash
-./"mountaincar&cheetah"/scripts/setup_env.sh --tinysim-path ../TinySim
-source ./"mountaincar&cheetah"/.venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
 ```
 
 ## Manipulation
-
-Run the manipulation ablations from repo root:
 
 ```bash
 python3 manipulation/run_ablations.py
 ```
 
-`run_ablations.py` executes the experiments defined in its `EXPERIMENTS` dictionary.
+`run_ablations.py` executes the experiments declared in its `EXPERIMENTS` dictionary.
 
 ## MountainCar + HalfCheetah
 
