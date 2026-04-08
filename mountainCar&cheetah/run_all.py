@@ -4,7 +4,7 @@ from runner import run_suite
 from types import MethodName
 
 seeds = [1, 2, 3, 4, 5]
-base_out = Path("/Users/kevaanbuch/Desktop/Uni/CSC415/mountaincar/runs/all_algo_sweep_equiv3600")
+base_out = Path(__file__).resolve().parent / "runs" / "all_algo_sweep_equiv3600"
 
 sweep = {
     MethodName.BO: [

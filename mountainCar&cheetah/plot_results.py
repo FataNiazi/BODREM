@@ -775,6 +775,205 @@ def _method_color(method: str) -> str:
     return METHOD_COLORS.get(method, "#1f77b4")
 
 
+def _json_float(value: float) -> float | None:
+    v = float(value)
+    if not np.isfinite(v):
+        return None
+    return v
+
+
+def _json_float_list(values: np.ndarray) -> list[float | None]:
+    arr = np.asarray(values, dtype=float)
+    return [_json_float(v) for v in arr.tolist()]
+
+
+def _json_int_list(values: np.ndarray) -> list[int]:
+    arr = np.asarray(values, dtype=int)
+    return [int(v) for v in arr.tolist()]
+
+
+def _series_statistics(
+    *,
+    steps: np.ndarray,
+    episodes: np.ndarray,
+    mean: np.ndarray,
+    std: np.ndarray,
+    n: np.ndarray,
+) -> dict[str, Any]:
+    steps_arr = np.asarray(steps, dtype=int)
+    ep_arr = np.asarray(episodes, dtype=float)
+    mean_arr = np.asarray(mean, dtype=float)
+    std_arr = np.asarray(std, dtype=float)
+    n_arr = np.asarray(n, dtype=int)
+
+    valid = np.isfinite(mean_arr)
+    finite = mean_arr[valid]
+    finite_steps = steps_arr[valid]
+    finite_ep = ep_arr[valid]
+
+    final_idx: int | None = None
+    if np.any(valid):
+        final_idx = int(np.where(valid)[0][-1])
+
+    best_idx: int | None = None
+    if np.any(valid):
+        best_idx = int(np.nanargmax(mean_arr))
+
+    auc = math.nan
+    auc_per_episode = math.nan
+    if finite.size >= 2 and finite_ep.size >= 2:
+        if hasattr(np, "trapezoid"):
+            auc = float(np.trapezoid(finite, finite_ep))
+        else:
+            auc = float(np.trapz(finite, finite_ep))
+        span = float(finite_ep[-1] - finite_ep[0])
+        if span > 0:
+            auc_per_episode = float(auc / span)
+
+    return {
+        "steps": _json_int_list(steps_arr),
+        "episodes": _json_float_list(ep_arr),
+        "mean": _json_float_list(mean_arr),
+        "std": _json_float_list(std_arr),
+        "n": _json_int_list(n_arr),
+        "summary": {
+            "mean_of_mean": _json_float(float(np.nanmean(finite)) if finite.size else math.nan),
+            "std_of_mean": _json_float(float(np.nanstd(finite)) if finite.size else math.nan),
+            "min_of_mean": _json_float(float(np.nanmin(finite)) if finite.size else math.nan),
+            "max_of_mean": _json_float(float(np.nanmax(finite)) if finite.size else math.nan),
+            "auc_trapz": _json_float(auc),
+            "auc_per_episode": _json_float(auc_per_episode),
+        },
+        "final": (
+            None
+            if final_idx is None
+            else {
+                "step": int(steps_arr[final_idx]),
+                "episode": _json_float(ep_arr[final_idx]),
+                "mean": _json_float(mean_arr[final_idx]),
+                "std": _json_float(std_arr[final_idx]),
+                "n": int(n_arr[final_idx]),
+            }
+        ),
+        "best": (
+            None
+            if best_idx is None
+            else {
+                "step": int(steps_arr[best_idx]),
+                "episode": _json_float(ep_arr[best_idx]),
+                "mean": _json_float(mean_arr[best_idx]),
+                "std": _json_float(std_arr[best_idx]),
+                "n": int(n_arr[best_idx]),
+            }
+        ),
+    }
+
+
+def _final_vector_stats(
+    *,
+    names: list[str],
+    mean: np.ndarray,
+    std: np.ndarray,
+    n: np.ndarray,
+) -> dict[str, dict[str, float | int | None]]:
+    out: dict[str, dict[str, float | int | None]] = {}
+    if not names or mean.size == 0:
+        return out
+    last = mean.shape[0] - 1
+    for i, name in enumerate(names):
+        out[name] = {
+            "mean": _json_float(mean[last, i]),
+            "std": _json_float(std[last, i]),
+            "n": int(n[last, i]),
+        }
+    return out
+
+
+def build_summary_statistics_payload(
+    summaries: dict[str, MethodSummary],
+) -> dict[str, Any]:
+    grouped: dict[tuple[str, str, str], list[MethodSummary]] = {}
+    for summary in summaries.values():
+        grouped.setdefault((summary.task, summary.variant, summary.metric_name), []).append(summary)
+
+    groups_out: list[dict[str, Any]] = []
+    method_rows_out: list[dict[str, Any]] = []
+    for (task, variant, metric_name), items in sorted(grouped.items(), key=lambda t: (t[0][0], t[0][1], t[0][2])):
+        items_sorted = sorted(
+            items,
+            key=lambda s: (METHOD_ORDER.index(s.method) if s.method in METHOD_ORDER else 999, s.method),
+        )
+
+        methods_out: list[dict[str, Any]] = []
+        final_means: list[float] = []
+        for summary in items_sorted:
+            metric_stats = _series_statistics(
+                steps=summary.metric_steps,
+                episodes=summary.metric_x,
+                mean=summary.metric_mean,
+                std=summary.metric_std,
+                n=summary.metric_n,
+            )
+            g_x = _map_steps_to_x(summary.metric_steps, summary.metric_x, summary.g_steps)
+            g_stats = _series_statistics(
+                steps=summary.g_steps,
+                episodes=g_x,
+                mean=summary.g_mean,
+                std=summary.g_std,
+                n=summary.g_n,
+            )
+            if metric_stats.get("final") and isinstance(metric_stats["final"], dict):
+                fin = metric_stats["final"].get("mean")
+                if isinstance(fin, (float, int)) and np.isfinite(float(fin)):
+                    final_means.append(float(fin))
+
+            method_stat = {
+                "method": summary.method,
+                "task": summary.task,
+                "variant": summary.variant,
+                "metric_name": summary.metric_name,
+                "run_count": int(summary.run_count),
+                "seed_count": int(len(summary.seeds)),
+                "seeds": [int(s) for s in summary.seeds],
+                "metric": metric_stats,
+                "constraint_g": g_stats,
+                "center_final": _final_vector_stats(
+                    names=summary.center_names,
+                    mean=summary.center_mean,
+                    std=summary.center_std,
+                    n=summary.center_n,
+                ),
+                "spread_kind": summary.spread_kind,
+                "spread_final": _final_vector_stats(
+                    names=summary.spread_names,
+                    mean=summary.spread_mean,
+                    std=summary.spread_std,
+                    n=summary.spread_n,
+                ),
+            }
+            methods_out.append(method_stat)
+            method_rows_out.append(method_stat)
+
+        groups_out.append(
+            {
+                "task": task,
+                "variant": variant,
+                "metric_name": metric_name,
+                "method_count": int(len(methods_out)),
+                "methods": methods_out,
+                "group_average_final_mean": _json_float(float(np.nanmean(final_means)) if final_means else math.nan),
+                "group_std_final_mean": _json_float(float(np.nanstd(final_means)) if final_means else math.nan),
+            }
+        )
+
+    return {
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "group_count": int(len(groups_out)),
+        "groups": groups_out,
+        "method_rows": method_rows_out,
+    }
+
+
 def _pretty_metric_name(metric_name: str) -> str:
     if metric_name == "target_solve_rate":
         return "Target solve-rate"
@@ -1387,6 +1586,10 @@ def generate_plots(
 
     comparison_files = plot_average_comparison(summaries, out_dir=out_dir)
     generated_files.extend(comparison_files)
+    summary_stats_path = out_dir / "summary_statistics.json"
+    summary_stats_payload = build_summary_statistics_payload(summaries)
+    with summary_stats_path.open("w", encoding="utf-8") as handle:
+        json.dump(summary_stats_payload, handle, indent=2)
 
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -1398,6 +1601,7 @@ def generate_plots(
         "run_count": int(len(series)),
         "generated_file_count": int(len(generated_files)),
         "comparison_files": comparison_files,
+        "summary_statistics_json": str(summary_stats_path),
         "method_summaries": method_rows,
         "generated_files": generated_files,
     }
