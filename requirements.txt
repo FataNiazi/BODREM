@@ -3,14 +3,11 @@ numpy>=1.26,<3
 scipy>=1.11,<2
 gymnasium>=0.29,<1
 gymnasium[classic-control]
-scikit-optimize>=0.9,<1
-stable-baselines3>=2.3,<3
-mujoco>=3,<4
-matplotlib>=3.8,<4
-tinysim
-imageio
-
-# NOTE:
-# tinysim is required at runtime by TinySim evaluators.
-# If `pip install tinysim` fails in your environment,
-# install it from your local TinySim source path via setup_env.sh.
+torch
+numpy
+scipy
+scikit-optimize
+matplotlib
+pandas
+mujoco
+# tinysim_mujoco is course-provided (CSC415) and not on PyPI — see README
