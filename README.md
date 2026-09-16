@@ -32,20 +32,23 @@ BORDEM roughly doubled the strongest baseline on this task. Results on MountainC
 
 ## Repository Structure
 
+The project is split into two independent experiment suites:
+
 ```
 .
-├── manipulation/              # Push-block manipulation experiments (MuJoCo + SAC)
-│   ├── pipeline.py             # SAC agent, DORAEMON Beta-DR adaptation, BO loop, training entry points
-│   └── run_ablations.py        # Ablation runner: BO / DORAEMON / BORDEM across easy/medium/hard difficulty
-├── domain_randomization/      # Bayesian domain randomization for MountainCar
-│   └── bayesian_dr.py
-├── agents/                    # DQN agent, Q-network, replay buffer (MountainCar)
-├── scripts/
-│   └── train.py                # DQN + Bayesian DR training entry point for MountainCar
-├── mountaincar_methods.py     # Unified runner across all 5 methods for MountainCar benchmarking
-├── *.ipynb                    # Experiment notebooks (MountainCar sim2sim runs, BO vs. DR comparison, policy demo)
-└── report.pdf                 # Full write-up
+├── manipulation/       # Push-block manipulation experiments (MuJoCo + SAC)
+│   ├── pipeline.py                              # SAC agent, DORAEMON Beta-DR adaptation, BO loop, training entry points
+│   ├── run_ablations.py                          # Ablation runner: BO / DORAEMON / BORDEM across easy/medium/hard difficulty
+│   └── bo_doraemon_paperlike_manipulation.ipynb  # Notebook version of the manipulation pipeline
+├── mountaincar/        # MountainCar + HalfCheetah experiments — own CLI, config system, and test suite
+│   ├── algorithms/      # BO, DR, BO+DR, DORAEMON, BO+DORAEMON as pluggable method classes
+│   ├── rl/               # DQN agent (MountainCar) and Stable-Baselines3 SAC integration (HalfCheetah)
+│   ├── tests/
+│   └── README.md        # Full setup, CLI reference, and sweep commands for this suite
+└── report.pdf          # Full write-up
 ```
+
+Each suite is self-contained — see `mountaincar/README.md` for the detailed CLI reference; the manipulation suite is run directly as described below.
 
 ## Setup
 
@@ -53,7 +56,14 @@ BORDEM roughly doubled the strongest baseline on this task. Results on MountainC
 pip install -r requirements.txt
 ```
 
-The manipulation experiments additionally require `mujoco` and `tinysim_mujoco`, a MuJoCo-based push-block environment supplied as course material for CSC415 (not on PyPI).
+For running the `mountaincar` test suite:
+```bash
+pip install -r requirements-dev.txt
+```
+
+Notes on dependencies:
+- The manipulation experiments require `tinysim_mujoco`, a MuJoCo-based push-block environment supplied as course material for CSC415 (not on PyPI).
+- HalfCheetah experiments require `stable-baselines3` and the Gymnasium MuJoCo stack (both already in `requirements.txt`).
 
 ## Running Experiments
 
@@ -61,10 +71,10 @@ The manipulation experiments additionally require `mujoco` and `tinysim_mujoco`,
 ```bash
 python3 manipulation/run_ablations.py
 ```
-Runs every experiment defined in the `EXPERIMENTS` dict in `run_ablations.py` (method × difficulty), prints an episode-budget summary before execution, and writes per-run configs, histories, and progress plots to `runs_manipulation/`.
+Runs every experiment defined in the `EXPERIMENTS` dict (method × difficulty), prints an episode-budget summary before execution, and writes per-run configs, histories, and progress plots to `runs_manipulation/`.
 
-**MountainCar:**
-See `mountaincar_all_methods_benchmark.ipynb` for the benchmarking driver, or `scripts/train.py` for a single DQN + Bayesian-DR training run.
+**MountainCar / HalfCheetah:**
+See [`mountaincar/README.md`](./mountaincar/README.md) for the CLI reference, smoke tests, and full edge-variant sweep commands.
 
 ## Team Contributions
 

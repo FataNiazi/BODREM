@@ -1,13 +1,12 @@
-# Core runtime dependencies for modular MountainCar
+# Core runtime dependencies
 numpy>=1.26,<3
 scipy>=1.11,<2
-gymnasium>=0.29,<1
-gymnasium[classic-control]
+gymnasium[classic-control,mujoco]>=0.29,<1
 torch
-numpy
-scipy
 scikit-optimize
 matplotlib
 pandas
 mujoco
+stable-baselines3
+
 # tinysim_mujoco is course-provided (CSC415) and not on PyPI — see README
