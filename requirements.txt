@@ -1,3 +1,9 @@
 gymnasium[classic-control]
 torch
 numpy
+scipy
+scikit-optimize
+matplotlib
+pandas
+mujoco
+# tinysim_mujoco is course-provided (CSC415) and not on PyPI — see README

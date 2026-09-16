@@ -1,2 +1,17 @@
 .vscode
 models/*
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Training artifacts
+runs/
+runs_manipulation/
+manipulation_saved/
+mountain_car_saved/
+*.pt
+
+# OS
+.DS_Store
