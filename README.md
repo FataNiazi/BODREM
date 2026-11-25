@@ -1,4 +1,4 @@
-# BORDEM: Bayesian Optimization Centered Domain Randomization via Entropy Maximization
+# BODREM: Bayesian Optimization Centered Domain Randomization via Entropy Maximization
 
 Final project for **CSC415: Introduction to Reinforcement Learning**, University of Toronto (March 2026).
 By Suhaima Ahmad, Fata Asgharzadniazi, and Kevaan Buch.
